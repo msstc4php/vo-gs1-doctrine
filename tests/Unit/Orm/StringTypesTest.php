@@ -42,6 +42,8 @@ use MSSTC4PHP\ValueObject\Gs1\Doctrine\Orm\RuMarkingIdentifierType;
 use MSSTC4PHP\ValueObject\Gs1\Doctrine\Orm\SsccType;
 use MSSTC4PHP\ValueObject\Gs1\Doctrine\Orm\TypeRegistrar;
 use MSSTC4PHP\ValueObject\Gs1\Doctrine\Tests\Support\Samples;
+use MSSTC4PHP\ValueObject\Gs1\Key\Gtin;
+use MSSTC4PHP\ValueObject\Gs1\Key\Sscc;
 use Override;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
@@ -108,7 +110,7 @@ final class StringTypesTest extends TestCase
     public function testColumnFitsTheLongestAcceptedForm(string $name, StringConvertible $vo, int $length, bool $atMax): void
     {
         self::assertSame(
-            \sprintf('VARCHAR(%d)', $length),
+            \in_array($name, Samples::TEXT_TYPES, true) ? $this->platform->getClobTypeDeclarationSQL([]) : \sprintf('VARCHAR(%d)', $length),
             Type::getType($name)->getSQLDeclaration([], $this->platform),
         );
         self::assertLessThanOrEqual($length, \mb_strlen((string) $vo));
@@ -139,6 +141,19 @@ final class StringTypesTest extends TestCase
             self::fail('An invalid stored value was accepted.');
         } catch (InvalidValueObjectException $exception) {
             self::assertStringNotContainsString($invalid, $exception->getMessage());
+        }
+    }
+
+    #[DataProviderExternal(Samples::class, 'stringPairs')]
+    public function testRefusesAValueObjectOfAnotherClassOnWrite(string $name, StringConvertible $vo): void
+    {
+        $foreign = $vo instanceof Gtin ? Sscc::from('006141411234567890') : Gtin::from('09506000134352');
+
+        try {
+            Type::getType($name)->convertToDatabaseValue($foreign, $this->platform);
+            self::fail('A value object of another class was written.');
+        } catch (InvalidArgumentException $exception) {
+            self::assertSame(\sprintf('Expected %s, got %s.', $vo::class, $foreign::class), $exception->getMessage());
         }
     }
 

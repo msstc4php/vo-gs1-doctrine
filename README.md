@@ -33,7 +33,21 @@ Runtime requirements: `msstc4php/vo-gs1`, `msstc4php/vo-base-doctrine ^1.2`; `do
 Every name is `gs1_` plus the snake_case of the class path below the package root, dropping a redundant leading
 `Gs1`; regional namespaces are kept as a prefix (`Marking\RU\MarkingCode` is `gs1_ru_marking_code`,
 `Marking\EU\Ppn` is `gs1_eu_ppn`, `Udi\Gs1Udi` is `gs1_udi`, `Udi\BasicUdiDi\Gs1BasicUdiDi` is `gs1_basic_udi_di`). The ORM column is `VARCHAR(n)`, `n` being the
-characters of the longest canonical value the class accepts; the ODM field is a BSON string without a length.
+characters of the longest canonical value the class accepts, except where that bound exceeds 4000 characters (the
+VARCHAR limit of SQL Server and Oracle; MySQL's row size limit too): those types (`gs1_digital_link`,
+`gs1_element_string`, `gs1_udi`) map to vo-base-doctrine's `AbstractTextVoType`, a CLOB/TEXT column. A TEXT column
+cannot carry a plain index on every platform (MySQL needs a prefix length); index a derived key instead (the GTIN, a
+hash of the value). The ODM field is a BSON string without a length.
+
+On write a type accepts only its own value-object class: a `Gtin` given to `gs1_ru_marking_code` throws
+`InvalidArgumentException` (vo-base-doctrine 1.2).
+
+**Collation.** Some values are case-sensitive: the crypto tail and serials of Russian marking codes, the FMD serial and
+batch, the PPN, the EU tobacco unit identifier, GS1 serials (CSET 82) and Digital Link URIs. Under a case-insensitive
+collation (MySQL `*_ci`, SQL Server's default `CI`) two values that differ only in case collide in a unique index and
+match each other in `WHERE`. Give these columns a binary or case-sensitive collation (MySQL `utf8mb4_bin` or
+`ascii_bin`, SQL Server `Latin1_General_BIN2`), for example
+`#[ORM\Column(type: 'gs1_ru_marking_code', options: ['collation' => 'utf8mb4_bin'])]`.
 
 Values keep control characters: GS (U+001D), RS (U+001E) and EOT (U+0004) in marking and FMD codes are stored as they
 are. An element string is stored in its canonical bracketed form, which has no GS.
@@ -52,8 +66,8 @@ are. An element string is stored in its canonical bracketed form, which has no G
 | `gs1_gsrn` | `Key\Gsrn` | 18 | fixed 18 digits |
 | `gs1_gtin` | `Key\Gtin` | 14 | longest accepted form, 14 digits (8, 12, 13, 14 accepted) |
 | `gs1_sscc` | `Key\Sscc` | 18 | fixed 18 digits |
-| `gs1_digital_link` | `DigitalLink\DigitalLink` | 14178 | `DigitalLinkSyntax::MAX_LENGTH` (the value is the URI as given) |
-| `gs1_element_string` | `ElementString\ElementString` | 14178 | canonical bracketed form; the package bounds every notation at twice the 7089-character data cap (`ElementStringSyntax::MAX_INPUT_LENGTH`) |
+| `gs1_digital_link` | `DigitalLink\DigitalLink` | CLOB (bound 14178) | `DigitalLinkSyntax::MAX_LENGTH` (the value is the URI as given) |
+| `gs1_element_string` | `ElementString\ElementString` | CLOB (bound 14178) | `ElementStringSyntax::MAX_LENGTH`: input and canonical bracketed form, a package bound |
 | `gs1_epc_pure_identity_uri` | `Epc\EpcPureIdentityUri` | 1024 | `EpcSyntax::MAX_LENGTH` |
 | `gs1_epc_tag_uri` | `Epc\EpcTagUri` | 1024 | `EpcSyntax::MAX_LENGTH` |
 | `gs1_eu_fmd_pack_code` | `Marking\EU\FmdPackCode` | 514 | `FmdPackCode::MAX_LENGTH` 512 (input cap) + 2: an IFA message read without its trailer is stored with RS EOT appended |
@@ -66,9 +80,9 @@ are. An element string is stored in its canonical bracketed form, which has no G
 | `gs1_hibcc_basic_udi_di` | `Udi\BasicUdiDi\HibccBasicUdiDi` | 25 | `++` + LIC 4 + model identifier 17 + 2 check characters |
 | `gs1_iccbba_basic_udi_di` | `Udi\BasicUdiDi\IccbbaBasicUdiDi` | 18 | fixed 16 + 2 checksum digits |
 | `gs1_ifa_basic_udi_di` | `Udi\BasicUdiDi\IfaBasicUdiDi` | 25 | `PP` + manufacturer 5 + device group 16 + 2 check digits |
-| `gs1_udi` | `Udi\Gs1Udi` | 14178 | same canonical form as ElementString |
+| `gs1_udi` | `Udi\Gs1Udi` | CLOB (bound 14178) | same canonical form as ElementString |
 | `gs1_hibc_udi` | `Udi\HibcUdi` | 113 | `HibcSyntax::MAX_LENGTH` |
-| `gs1_isbt_udi` | `Udi\IsbtUdi` | 2048 | `IsbtSyntax::MAX_LENGTH` (the stored concatenation is never longer than the input) |
+| `gs1_isbt_udi` | `Udi\IsbtUdi` | 3116 | `IsbtSyntax::MAX_LENGTH`, the largest Data Matrix (the stored concatenation is never longer than the input) |
 | `gs1_ndc` | `Udi\Ndc` | 13 | `Ndc::MAX_LENGTH` = 13 (6-4-1 and 6-3-2 with hyphens) |
 | `gs1_ndc12` | `Udi\Ndc12` | 14 | 12 digits + 2 hyphens |
 

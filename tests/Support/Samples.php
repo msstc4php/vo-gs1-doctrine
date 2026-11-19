@@ -50,6 +50,9 @@ final class Samples
 
     public const string BAD_STORED = 'zz9qq!';
 
+    /** @var non-empty-list<non-empty-string> types whose bound exceeds 4000 characters map to CLOB/TEXT */
+    public const array TEXT_TYPES = ['gs1_digital_link', 'gs1_element_string', 'gs1_udi'];
+
     public const string RU_CODE_44 = 'MEUCIQDvA1b2C3d4E5f6G7h8I9j0K+L/M=N-O.P_Q:R;';
 
     public const string IFA_PACK = "[)>\x1E06\x1D9N111234567842\x1D1T1A234B5\x1DD151231\x1DS1234567890123456\x1E\x04";
@@ -184,7 +187,7 @@ final class Samples
         yield 'isbt udi' => [
             'gs1_isbt_udi',
             IsbtUdi::from('=/A9997XYZ100T0479=A99991712345600=,000012=>019031'),
-            2048,
+            3116,
             self::BAD_STORED,
             false,
         ];

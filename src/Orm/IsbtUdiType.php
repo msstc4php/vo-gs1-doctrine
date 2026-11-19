@@ -21,6 +21,6 @@ final class IsbtUdiType extends AbstractStringVoType
     #[Override]
     protected function columnLength(): int
     {
-        return 2048;
+        return 3116;
     }
 }

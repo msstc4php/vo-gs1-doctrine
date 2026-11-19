@@ -32,6 +32,8 @@ use ReflectionClassConstant;
 #[CoversNothing]
 final class ColumnLengthsFollowTheLibraryBoundsTest extends TestCase
 {
+    private const int VARCHAR_LIMIT = 4000;
+
     /**
      * Types whose bound is not a constant of the library (fixed-width keys, check-digit formats) are proven by the
      * at-max samples of the string type tests instead.
@@ -40,8 +42,6 @@ final class ColumnLengthsFollowTheLibraryBoundsTest extends TestCase
      */
     public static function bounds(): iterable
     {
-        $doubleData = 2 * self::constant(ElementStringSyntax::class, 'MAX_DATA_LENGTH');
-
         yield 'cpid' => ['gs1_cpid', self::constant(Cpid::class, 'MAX')];
         yield 'gcn' => ['gs1_gcn', 13 + self::constant(Gcn::class, 'SERIAL_MAX')];
         yield 'gdti' => ['gs1_gdti', 13 + self::constant(Gdti::class, 'SERIAL_MAX')];
@@ -49,9 +49,6 @@ final class ColumnLengthsFollowTheLibraryBoundsTest extends TestCase
         yield 'ginc' => ['gs1_ginc', self::constant(Ginc::class, 'MAX')];
         yield 'gmn' => ['gs1_gmn', self::constant(Gmn::class, 'MAX')];
         yield 'grai' => ['gs1_grai', 14 + self::constant(Grai::class, 'SERIAL_MAX')];
-        yield 'digital link' => ['gs1_digital_link', self::constant(DigitalLinkSyntax::class, 'MAX_LENGTH')];
-        yield 'element string' => ['gs1_element_string', $doubleData];
-        yield 'gs1 udi' => ['gs1_udi', $doubleData];
         yield 'epc pure identity uri' => ['gs1_epc_pure_identity_uri', self::constant(EpcSyntax::class, 'MAX_LENGTH')];
         yield 'epc tag uri' => ['gs1_epc_tag_uri', self::constant(EpcSyntax::class, 'MAX_LENGTH')];
         // An IFA message read without its trailer is stored with RS and EOT appended.
@@ -81,6 +78,40 @@ final class ColumnLengthsFollowTheLibraryBoundsTest extends TestCase
             \sprintf('VARCHAR(%d)', $bound),
             Type::getType($name)->getSQLDeclaration([], new SQLitePlatform()),
         );
+        // SQL Server NVARCHAR and Oracle VARCHAR2 stop at 4000.
+        self::assertLessThanOrEqual(self::VARCHAR_LIMIT, $bound);
+    }
+
+    /**
+     * @return iterable<string, array{non-empty-string, int}>
+     */
+    public static function textBounds(): iterable
+    {
+        yield 'digital link' => ['gs1_digital_link', self::constant(DigitalLinkSyntax::class, 'MAX_LENGTH')];
+        yield 'element string' => ['gs1_element_string', self::constant(ElementStringSyntax::class, 'MAX_LENGTH')];
+        yield 'gs1 udi' => ['gs1_udi', self::constant(ElementStringSyntax::class, 'MAX_LENGTH')];
+    }
+
+    #[DataProvider('textBounds')]
+    public function testABoundAboveTheVarcharLimitMapsToAClob(string $name, int $bound): void
+    {
+        TypeRegistrar::registerAll();
+        $platform = new SQLitePlatform();
+
+        self::assertGreaterThan(self::VARCHAR_LIMIT, $bound);
+        self::assertSame($platform->getClobTypeDeclarationSQL([]), Type::getType($name)->getSQLDeclaration([], $platform));
+    }
+
+    public function testEveryOrmTypeIsBoundedOrAClob(): void
+    {
+        $listed = [...\array_column(\iterator_to_array(self::bounds()), 0), ...\array_column(\iterator_to_array(self::textBounds()), 0)];
+        $unlisted = \array_diff(\array_keys(TypeRegistrar::types()), $listed);
+        TypeRegistrar::registerAll();
+
+        foreach ($unlisted as $name) {
+            $declaration = Type::getType($name)->getSQLDeclaration([], new SQLitePlatform());
+            self::assertMatchesRegularExpression('/^VARCHAR\((\d{1,3}|[1-3]\d{3}|4000)\)$/', $declaration, $name);
+        }
     }
 
     /**

@@ -64,7 +64,7 @@ final class OrmRoundTripTest extends TestCase
         ));
 
         self::assertStringContainsString('gtin VARCHAR(14) NOT NULL', $sql);
-        self::assertStringContainsString('element VARCHAR(14178) NOT NULL', $sql);
+        self::assertStringContainsString('element CLOB NOT NULL', $sql);
         self::assertStringContainsString('marking VARCHAR(255) DEFAULT NULL', $sql);
         self::assertStringContainsString('pack VARCHAR(514) DEFAULT NULL', $sql);
     }
