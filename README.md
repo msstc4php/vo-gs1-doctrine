@@ -9,9 +9,9 @@ type: map them with `enumType`.
 
 ## Type names and lengths
 
-Every name is `gs1_` plus the snake_case class name. Classes of a country or region namespace (`Marking\EU`,
-`Marking\RU`) add its code (`gs1_ru_marking_code`, `gs1_eu_ppn`); a leading `Gs1` of the class name is not repeated
-(`Gs1Udi` is `gs1_udi`, `Gs1BasicUdiDi` is `gs1_basic_udi_di`). The ORM column is `VARCHAR(n)`, `n` being the
+Every name is `gs1_` plus the snake_case of the class path below the package root, dropping a redundant leading
+`Gs1`; regional namespaces are kept as a prefix (`Marking\RU\MarkingCode` is `gs1_ru_marking_code`,
+`Marking\EU\Ppn` is `gs1_eu_ppn`, `Udi\Gs1Udi` is `gs1_udi`, `Udi\BasicUdiDi\Gs1BasicUdiDi` is `gs1_basic_udi_di`). The ORM column is `VARCHAR(n)`, `n` being the
 characters of the longest canonical value the class accepts; the ODM field is a BSON string without a length.
 
 Values keep control characters: GS (U+001D), RS (U+001E) and EOT (U+0004) in marking and FMD codes are stored as they

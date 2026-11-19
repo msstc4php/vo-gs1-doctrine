@@ -93,6 +93,13 @@ final class OdmRoundTripTest extends TestCase
         self::assertSame('XYZ', $shipment->element->get('21'));
         self::assertNull($shipment->marking);
         self::assertNull($shipment->pack);
+
+        $raw = $this->client->selectCollection(
+            self::DATABASE,
+            'shipment',
+        )->findOne([], ['typeMap' => ['root' => 'array', 'document' => 'array']]);
+        self::assertIsArray($raw);
+        self::assertSame('(01)09506000134352(10)ABC(21)XYZ', $raw['element']);
     }
 
     public function testControlCharactersOfMarkingAndPackCodesAreStoredLosslessly(): void
