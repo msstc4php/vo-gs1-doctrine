@@ -7,6 +7,27 @@ Doctrine ORM (DBAL) and MongoDB ODM types for [`msstc4php/vo-gs1`](https://githu
 NDC, EU and Russian marking codes). Backed enums (`GtinFormat`, `Gs1Prefix`, `IssuingAgency`, `EpcScheme`, ...) need no
 type: map them with `enumType`.
 
+## Install
+
+Not on Packagist yet; register the GitHub repositories:
+
+```json
+{
+    "repositories": [
+        { "type": "vcs", "url": "https://github.com/msstc4php/vo-base" },
+        { "type": "vcs", "url": "https://github.com/msstc4php/vo-base-doctrine" },
+        { "type": "vcs", "url": "https://github.com/msstc4php/vo-gs1" },
+        { "type": "vcs", "url": "https://github.com/msstc4php/vo-gs1-doctrine" }
+    ],
+    "require": {
+        "msstc4php/vo-gs1-doctrine": "^0.1"
+    }
+}
+```
+
+Runtime requirements: `msstc4php/vo-gs1`, `msstc4php/vo-base-doctrine ^1.2`; `doctrine/dbal` (ORM) or
+`doctrine/mongodb-odm` (ODM) is yours.
+
 ## Type names and lengths
 
 Every name is `gs1_` plus the snake_case of the class path below the package root, dropping a redundant leading
@@ -53,8 +74,22 @@ are. An element string is stored in its canonical bracketed form, which has no G
 
 ## Usage
 
-Bare Doctrine: call `Orm\TypeRegistrar::registerAll()` (or `Odm\TypeRegistrar::registerAll()`) once at bootstrap.
-Symfony: map `TypeRegistrar::types()` under `doctrine.dbal.types` (ORM) or `doctrine_mongodb.odm.types` (ODM).
+Registration, ORM or ODM (the two branches never see each other):
+
+```php
+\MSSTC4PHP\ValueObject\Gs1\Doctrine\Orm\TypeRegistrar::registerAll();   // once at bootstrap; idempotent
+\MSSTC4PHP\ValueObject\Gs1\Doctrine\Odm\TypeRegistrar::registerAll();
+```
+
+Symfony: map `TypeRegistrar::types()` (name => class) under `doctrine.dbal.types` (ORM) or
+`doctrine_mongodb.odm.types` (ODM). Then use the type name in the mapping:
+
+```php
+#[ORM\Column(type: 'gs1_gtin', length: 14)]
+private Gtin $gtin;
+```
+
+The value objects are string value objects, so no codec is involved: the canonical string is stored.
 
 ## License
 
