@@ -41,7 +41,8 @@ covered.
   For `gs1_ru_marking_identifier`, detect the rows in PHP, not SQL (only vo-gs1 decides the ambiguity): select the
   rows with `CHAR_LENGTH(col) = 25`, and for each value `MarkingIdentifier::isValid($value)` refuses while
   `MarkingIdentifier::fromTobaccoConsumerPack($value)` accepts, run
-  `UPDATE … SET col = CONCAT(']d1', col) WHERE id = :id`. An `IsbtUdi` row needs nothing unless the application
+  `UPDATE … SET col = CONCAT(']d1', col) WHERE id = :id` (MySQL/PostgreSQL syntax; adapt `CHAR_LENGTH` and `CONCAT`
+  to your platform). An `IsbtUdi` row needs nothing unless the application
   stores compound-message input and looks it up by value; then rewrite those rows from the input or compare with
   `equals()`.
 - Downgrading to 0.x after 1.0 has written values is not possible for these columns without reverting the data:
