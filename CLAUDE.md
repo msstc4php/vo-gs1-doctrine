@@ -15,7 +15,7 @@ Local install against the sibling checkouts (`../vo-base`, `../vo-base-doctrine`
 
 `composer-local.json` is gitignored. Create it from `composer-ci.json`: replace the three VCS repositories with path
 repositories (`{"type": "path", "url": "../vo-base", "options": {"symlink": true}}`, same for `../vo-base-doctrine` and
-`../vo-gs1`) and require `msstc4php/vo-base-doctrine` and `msstc4php/vo-base` as `dev-main as 1.2.0` and
+`../vo-gs1`) and require `msstc4php/vo-base-doctrine` and `msstc4php/vo-base` as `dev-main as 1.3.0` and
 `msstc4php/vo-gs1` as `dev-main as 0.1.0`.
 
 - `make check`, `make test`, `make infection`, `make fix`.
