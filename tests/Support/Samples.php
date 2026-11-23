@@ -51,7 +51,7 @@ final class Samples
     public const string BAD_STORED = 'zz9qq!';
 
     /** @var non-empty-list<non-empty-string> types whose bound exceeds 4000 characters map to CLOB/TEXT */
-    public const array TEXT_TYPES = ['gs1_digital_link', 'gs1_element_string', 'gs1_udi'];
+    public const array TEXT_TYPES = ['gs1_digital_link', 'gs1_element_string', 'gs1_gs1_udi'];
 
     public const string RU_CODE_44 = 'MEUCIQDvA1b2C3d4E5f6G7h8I9j0K+L/M=N-O.P_Q:R;';
 
@@ -108,14 +108,14 @@ final class Samples
         yield 'eu fmd pack code, ifa' => [
             'gs1_eu_fmd_pack_code',
             FmdPackCode::from(self::IFA_PACK),
-            514,
+            512,
             self::BAD_STORED,
             false,
         ];
         yield 'eu fmd pack code, gs1' => [
             'gs1_eu_fmd_pack_code',
             FmdPackCode::from('(01)04150123456782(10)1A234B5(17)151231(21)1234567890123456'),
-            514,
+            512,
             self::BAD_STORED,
             false,
         ];
@@ -144,12 +144,12 @@ final class Samples
         yield 'ru marking identifier' => [
             'gs1_ru_marking_identifier',
             MarkingIdentifier::from('(01)04600439931256(21)5aB3x_YZ'),
-            255,
+            74,
             self::BAD_STORED,
             false,
         ];
         yield 'gs1 basic udi-di' => [
-            'gs1_basic_udi_di',
+            'gs1_gs1_basic_udi_di',
             Gs1BasicUdiDi::from('1987654Ad4X4bL5ttr2310c2K'),
             25,
             self::BAD_STORED,
@@ -177,7 +177,7 @@ final class Samples
             true,
         ];
         yield 'gs1 udi' => [
-            'gs1_udi',
+            'gs1_gs1_udi',
             Gs1Udi::from('(01)09506000134352(17)201225(10)ABC123(11)200101(21)XYZ'),
             14178,
             self::BAD_STORED,

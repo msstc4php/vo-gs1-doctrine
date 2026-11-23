@@ -21,6 +21,6 @@ final class RuMarkingIdentifierType extends AbstractStringVoType
     #[Override]
     protected function columnLength(): int
     {
-        return 255;
+        return 74;
     }
 }

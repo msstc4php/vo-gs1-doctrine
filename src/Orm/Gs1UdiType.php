@@ -10,7 +10,7 @@ use Override;
 
 final class Gs1UdiType extends AbstractTextVoType
 {
-    public const string NAME = 'gs1_udi';
+    public const string NAME = 'gs1_gs1_udi';
 
     #[Override]
     protected function valueObjectClass(): string

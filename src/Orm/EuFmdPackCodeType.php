@@ -21,6 +21,6 @@ final class EuFmdPackCodeType extends AbstractStringVoType
     #[Override]
     protected function columnLength(): int
     {
-        return 514;
+        return 512;
     }
 }
