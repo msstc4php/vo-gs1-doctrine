@@ -15,8 +15,8 @@ Local install against the sibling checkouts (`../vo-base`, `../vo-base-doctrine`
 
 `composer-local.json` is gitignored. Create it from `composer-ci.json`: replace the three VCS repositories with path
 repositories (`{"type": "path", "url": "../vo-base", "options": {"symlink": true}}`, same for `../vo-base-doctrine` and
-`../vo-gs1`) and require `msstc4php/vo-base-doctrine` and `msstc4php/vo-base` as `dev-main as 1.3.0` and
-`msstc4php/vo-gs1` as `dev-main as 0.1.0`.
+`../vo-gs1`) and require `msstc4php/vo-base-doctrine` as `dev-main as 1.3.0`, `msstc4php/vo-base` as
+`dev-main as 1.4.0` and `msstc4php/vo-gs1` as `dev-main as 1.0.0`.
 
 - `make check`, `make test`, `make infection`, `make fix`.
 - The ODM integration tests need MongoDB (`MONGODB_URI`, default `mongodb://127.0.0.1:27017`) and skip themselves
@@ -31,4 +31,5 @@ enforces it. Do not edit `.php-cs-fixer.dist.php`, `rector.php`, `phpstan*.neon`
 ## Adding a class of `vo-gs1`
 
 Every non-abstract value object needs one ORM and one ODM type named `gs1_<snake_name>` (column length = the class's
-maximum length), registered in both `TypeRegistrar`s.
+public `MAX_LENGTH`, written as a literal), registered in both `TypeRegistrar`s. Released as 1.x: type names and column
+lengths never change in a minor (README "Backward compatibility").

@@ -1,6 +1,9 @@
 # Known issues
 
-- CI fails until `vo-base` and `vo-base-doctrine` are tagged `v1.2.0` and the GitHub repositories exist.
+- `composer.json` requires `vo-gs1 ^1.0`, which resolves only once vo-gs1 v1.0.0 is tagged; CI uses
+  `composer-ci.json` (`dev-main as 1.0.0`) until then.
+- `Gtin` (and `IsbtUdi`, `DigitalLink`) compare by identity, not by the stored string: equal objects can be two rows
+  (README, "Equality is not string equality"; ruling S7).
 - Infection is 100% covered MSI with the types in place (it was 66% with zero types).
 - The ODM round trip needs MongoDB and skips itself without one; the ORM one runs on SQLite.
 - `ElementString` canonical form is bracketed, so its stored value never contains GS; the GS/RS/EOT round trips are
