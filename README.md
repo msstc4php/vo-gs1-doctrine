@@ -36,16 +36,16 @@ Runtime requirements: `msstc4php/vo-gs1 ^1.0`, `msstc4php/vo-base-doctrine ^1.3`
 ## Type names and lengths
 
 Every name is `gs1_` plus the snake_case of the class name; regional namespaces are kept as a prefix
-(`Marking\RU\MarkingCode` is `gs1_ru_marking_code`, `Marking\EU\Ppn` is `gs1_eu_ppn`). The issuing agency of a UDI
-class is part of its name, `Gs1` included: `Udi\Gs1Udi` is `gs1_gs1_udi` and `Udi\BasicUdiDi\Gs1BasicUdiDi` is
+(`Marking\RU\MarkingCode` is `gs1_ru_marking_code`, `Marking\EU\Ppn` is `gs1_eu_ppn`). The issuing agency of a UDI class
+is part of its name, `Gs1` included: `Udi\Gs1Udi` is `gs1_gs1_udi` and `Udi\BasicUdiDi\Gs1BasicUdiDi` is
 `gs1_gs1_basic_udi_di`, like `gs1_hibc_udi` and `gs1_hibcc_basic_udi_di`. The generic names `gs1_udi` and
 `gs1_basic_udi_di` stay free for a later type that stores any UDI or any Basic UDI-DI (`Udi` and `BasicUdiDi` are
-interfaces, which vo-base does not map; such polymorphic storage will be a separate, additive type). The ORM column
-is `VARCHAR(n)`, `n` being the class's public `MAX_LENGTH` (the longest stored value, frozen for vo-gs1 1.x), except where that bound exceeds 4000 characters (the
-VARCHAR limit of SQL Server and Oracle; MySQL's row size limit too): those types (`gs1_digital_link`,
-`gs1_element_string`, `gs1_gs1_udi`) map to vo-base-doctrine's `AbstractTextVoType`, a CLOB/TEXT column. A TEXT column
-cannot carry a plain index on every platform (MySQL needs a prefix length); index a derived key instead (the GTIN, a
-hash of the value). The ODM field is a BSON string without a length.
+interfaces, which vo-base does not map; such polymorphic storage will be a separate, additive type). The ORM column is
+`VARCHAR(n)`, `n` being the class's public `MAX_LENGTH` (the longest stored value, frozen for vo-gs1 1.x), except where
+that bound exceeds 4000 characters (the VARCHAR limit of SQL Server and Oracle; MySQL's row size limit too): those types
+(`gs1_digital_link`, `gs1_element_string`, `gs1_gs1_udi`) map to vo-base-doctrine's `AbstractTextVoType`, a CLOB/TEXT
+column. A TEXT column cannot carry a plain index on every platform (MySQL needs a prefix length); index a derived key
+instead (the GTIN, a hash of the value). The ODM field is a BSON string without a length.
 
 On write a type accepts only its own value-object class: a `Gtin` given to `gs1_ru_marking_code` throws
 `InvalidArgumentException` (vo-base-doctrine 1.2).
@@ -61,7 +61,9 @@ match each other in `WHERE`. Give these columns a binary or case-sensitive colla
 form, so `4006381333931` and `04006381333931` are equal objects and different rows: a unique index lets both in and
 `WHERE gtin = …` misses one. Index or compare on `toGtin14()` (a separate column or a generated one), or normalise
 before you persist (`Gtin::from($gtin->toGtin14())`). `IsbtUdi` (compound message or human-readable form) and
-`DigitalLink` (escapes, case of the host, parameter order) behave the same way.
+`DigitalLink` (escapes, case of the host, parameter order) behave the same way. Rows written under vo-gs1 0.x can
+hold an older stored form of the same value (an ambiguous tobacco pack КИ without `]d1`, an `IsbtUdi` without its
+compound message header); CHANGELOG, "Upgrading from 0.x", has the data migration.
 
 Values keep control characters: GS (U+001D), RS (U+001E) and EOT (U+0004) in marking and FMD codes are stored as they
 are. An element string is stored in its canonical bracketed form, which has no GS.
@@ -84,7 +86,7 @@ are. An element string is stored in its canonical bracketed form, which has no G
 | `gs1_element_string` | `ElementString\ElementString` | CLOB (bound 14178) | `ElementString::MAX_LENGTH`: input and canonical bracketed form, a package bound |
 | `gs1_epc_pure_identity_uri` | `Epc\EpcPureIdentityUri` | 1024 | `EpcPureIdentityUri::MAX_LENGTH` |
 | `gs1_epc_tag_uri` | `Epc\EpcTagUri` | 1024 | `EpcTagUri::MAX_LENGTH` |
-| `gs1_eu_fmd_pack_code` | `Marking\EU\FmdPackCode` | 512 | `FmdPackCode::MAX_LENGTH`: the stored form, an IFA message read without its trailer included with RS EOT appended |
+| `gs1_eu_fmd_pack_code` | `Marking\EU\FmdPackCode` | 514 | `FmdPackCode::MAX_LENGTH`: the stored form, including the RS EOT trailer that is appended to an IFA message given without one |
 | `gs1_eu_ppn` | `Marking\EU\Ppn` | 28 | `Ppn::MAX_LENGTH`: PRA Code 2, product number up to 24, check digits 2 |
 | `gs1_eu_tobacco_unit_identifier` | `Marking\EU\TobaccoUnitIdentifier` | 50 | `TobaccoUnitIdentifier::MAX_LENGTH` (Article 8(1)) |
 | `gs1_eu_tobacco_unit_identifier_without_time_stamp` | `Marking\EU\TobaccoUnitIdentifierWithoutTimeStamp` | 42 | `TobaccoUnitIdentifierWithoutTimeStamp::MAX_LENGTH` (50 less the 8-digit time stamp) |
@@ -96,7 +98,7 @@ are. An element string is stored in its canonical bracketed form, which has no G
 | `gs1_ifa_basic_udi_di` | `Udi\BasicUdiDi\IfaBasicUdiDi` | 25 | `IfaBasicUdiDi::MAX_LENGTH`: `PP` + manufacturer 5 + device group 16 + 2 check digits |
 | `gs1_gs1_udi` | `Udi\Gs1Udi` | CLOB (bound 14178) | `Gs1Udi::MAX_LENGTH`, the element string bound |
 | `gs1_hibc_udi` | `Udi\HibcUdi` | 113 | `HibcUdi::MAX_LENGTH` |
-| `gs1_isbt_udi` | `Udi\IsbtUdi` | 3116 | `IsbtUdi::MAX_LENGTH`, the largest Data Matrix (the stored form is never longer than the input) |
+| `gs1_isbt_udi` | `Udi\IsbtUdi` | 3123 | `IsbtUdi::MAX_LENGTH`: 3116 characters of data structures (the largest Data Matrix) plus the compound message header |
 | `gs1_ndc` | `Udi\Ndc` | 13 | `Ndc::MAX_LENGTH` (6-4-1 and 6-3-2 with hyphens) |
 | `gs1_ndc12` | `Udi\Ndc12` | 14 | `Ndc12::MAX_LENGTH`: 12 digits + 2 hyphens |
 

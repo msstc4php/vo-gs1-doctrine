@@ -13,6 +13,7 @@ use MSSTC4PHP\ValueObject\Gs1\Doctrine\Odm\ElementStringType;
 use MSSTC4PHP\ValueObject\Gs1\Doctrine\Odm\EuFmdPackCodeType;
 use MSSTC4PHP\ValueObject\Gs1\Doctrine\Odm\GtinType;
 use MSSTC4PHP\ValueObject\Gs1\Doctrine\Odm\RuMarkingCodeType;
+use MSSTC4PHP\ValueObject\Gs1\Doctrine\Odm\RuMarkingIdentifierType;
 use MSSTC4PHP\ValueObject\Gs1\Doctrine\Odm\TypeRegistrar;
 use MSSTC4PHP\ValueObject\Gs1\Doctrine\Tests\Support\Odm\Shipment;
 use MSSTC4PHP\ValueObject\Gs1\Doctrine\Tests\Support\Samples;
@@ -29,6 +30,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ElementStringType::class)]
 #[CoversClass(RuMarkingCodeType::class)]
 #[CoversClass(EuFmdPackCodeType::class)]
+#[CoversClass(RuMarkingIdentifierType::class)]
 #[UsesClass(TypeRegistrar::class)]
 final class OdmRoundTripTest extends TestCase
 {
@@ -132,5 +134,21 @@ final class OdmRoundTripTest extends TestCase
         self::assertTrue($marking->equals($shipment->marking));
         self::assertTrue($pack->equals($shipment->pack));
         self::assertSame(Samples::IFA_PACK, $shipment->pack->value);
+    }
+
+    public function testA0xDocumentOfAnAmbiguousPackIdentifierHydratesAsThePack(): void
+    {
+        $this->client->selectCollection(self::DATABASE, 'shipment')->insertOne([
+            'gtin' => '09506000134352',
+            'element' => '(01)09506000134352',
+            'identifier' => Samples::AMBIGUOUS_PACK_IDENTIFIER,
+        ]);
+
+        $shipment = $this->documentManager->getRepository(Shipment::class)->findOneBy([]);
+
+        self::assertInstanceOf(Shipment::class, $shipment);
+        self::assertNotNull($shipment->identifier);
+        self::assertTrue($shipment->identifier->isTobaccoConsumerPack());
+        self::assertSame(']d1' . Samples::AMBIGUOUS_PACK_IDENTIFIER, (string) $shipment->identifier);
     }
 }

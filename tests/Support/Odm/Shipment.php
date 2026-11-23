@@ -9,10 +9,12 @@ use MSSTC4PHP\ValueObject\Gs1\Doctrine\Odm\ElementStringType;
 use MSSTC4PHP\ValueObject\Gs1\Doctrine\Odm\EuFmdPackCodeType;
 use MSSTC4PHP\ValueObject\Gs1\Doctrine\Odm\GtinType;
 use MSSTC4PHP\ValueObject\Gs1\Doctrine\Odm\RuMarkingCodeType;
+use MSSTC4PHP\ValueObject\Gs1\Doctrine\Odm\RuMarkingIdentifierType;
 use MSSTC4PHP\ValueObject\Gs1\ElementString\ElementString;
 use MSSTC4PHP\ValueObject\Gs1\Key\Gtin;
 use MSSTC4PHP\ValueObject\Gs1\Marking\EU\FmdPackCode;
 use MSSTC4PHP\ValueObject\Gs1\Marking\RU\MarkingCode;
+use MSSTC4PHP\ValueObject\Gs1\Marking\RU\MarkingIdentifier;
 
 #[ODM\Document(collection: 'shipment')]
 class Shipment
@@ -29,6 +31,8 @@ class Shipment
         public ?MarkingCode $marking = null,
         #[ODM\Field(type: EuFmdPackCodeType::NAME, nullable: true)]
         public ?FmdPackCode $pack = null,
+        #[ODM\Field(type: RuMarkingIdentifierType::NAME, nullable: true)]
+        public ?MarkingIdentifier $identifier = null,
     ) {
     }
 }

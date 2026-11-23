@@ -55,6 +55,9 @@ final class Samples
 
     public const string RU_CODE_44 = 'MEUCIQDvA1b2C3d4E5f6G7h8I9j0K+L/M=N-O.P_Q:R;';
 
+    /** A tobacco consumer-pack КИ that also reads as `01` + GTIN + `21` + 7; vo-gs1 0.x stored it bare. */
+    public const string AMBIGUOUS_PACK_IDENTIFIER = "0104600439930501215U!Mq'X";
+
     public const string IFA_PACK = "[)>\x1E06\x1D9N111234567842\x1D1T1A234B5\x1DD151231\x1DS1234567890123456\x1E\x04";
 
     /**
@@ -108,14 +111,14 @@ final class Samples
         yield 'eu fmd pack code, ifa' => [
             'gs1_eu_fmd_pack_code',
             FmdPackCode::from(self::IFA_PACK),
-            512,
+            514,
             self::BAD_STORED,
             false,
         ];
         yield 'eu fmd pack code, gs1' => [
             'gs1_eu_fmd_pack_code',
             FmdPackCode::from('(01)04150123456782(10)1A234B5(17)151231(21)1234567890123456'),
-            512,
+            514,
             self::BAD_STORED,
             false,
         ];
@@ -187,7 +190,7 @@ final class Samples
         yield 'isbt udi' => [
             'gs1_isbt_udi',
             IsbtUdi::from('=/A9997XYZ100T0479=A99991712345600=,000012=>019031'),
-            3116,
+            3123,
             self::BAD_STORED,
             false,
         ];

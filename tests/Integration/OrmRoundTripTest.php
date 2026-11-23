@@ -15,6 +15,7 @@ use MSSTC4PHP\ValueObject\Gs1\Doctrine\Orm\ElementStringType;
 use MSSTC4PHP\ValueObject\Gs1\Doctrine\Orm\EuFmdPackCodeType;
 use MSSTC4PHP\ValueObject\Gs1\Doctrine\Orm\GtinType;
 use MSSTC4PHP\ValueObject\Gs1\Doctrine\Orm\RuMarkingCodeType;
+use MSSTC4PHP\ValueObject\Gs1\Doctrine\Orm\RuMarkingIdentifierType;
 use MSSTC4PHP\ValueObject\Gs1\Doctrine\Orm\TypeRegistrar;
 use MSSTC4PHP\ValueObject\Gs1\Doctrine\Tests\Support\Orm\Shipment;
 use MSSTC4PHP\ValueObject\Gs1\Doctrine\Tests\Support\Samples;
@@ -31,6 +32,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ElementStringType::class)]
 #[CoversClass(RuMarkingCodeType::class)]
 #[CoversClass(EuFmdPackCodeType::class)]
+#[CoversClass(RuMarkingIdentifierType::class)]
 #[UsesClass(TypeRegistrar::class)]
 final class OrmRoundTripTest extends TestCase
 {
@@ -66,7 +68,8 @@ final class OrmRoundTripTest extends TestCase
         self::assertStringContainsString('gtin VARCHAR(14) NOT NULL', $sql);
         self::assertStringContainsString('element CLOB NOT NULL', $sql);
         self::assertStringContainsString('marking VARCHAR(255) DEFAULT NULL', $sql);
-        self::assertStringContainsString('pack VARCHAR(512) DEFAULT NULL', $sql);
+        self::assertStringContainsString('pack VARCHAR(514) DEFAULT NULL', $sql);
+        self::assertStringContainsString('identifier VARCHAR(74) DEFAULT NULL', $sql);
     }
 
     public function testElementStringWithGroupSeparatorSurvivesAFlushAndReload(): void
@@ -119,5 +122,21 @@ final class OrmRoundTripTest extends TestCase
         self::assertTrue($marking->equals($shipment->marking));
         self::assertTrue($pack->equals($shipment->pack));
         self::assertSame(Samples::IFA_PACK, $shipment->pack->value);
+    }
+
+    public function testA0xRowOfAnAmbiguousPackIdentifierHydratesAsThePack(): void
+    {
+        $this->connection->insert('shipment', [
+            'gtin' => '09506000134352',
+            'element' => '(01)09506000134352',
+            'identifier' => Samples::AMBIGUOUS_PACK_IDENTIFIER,
+        ]);
+
+        $shipment = $this->entityManager->getRepository(Shipment::class)->findOneBy([]);
+
+        self::assertInstanceOf(Shipment::class, $shipment);
+        self::assertNotNull($shipment->identifier);
+        self::assertTrue($shipment->identifier->isTobaccoConsumerPack());
+        self::assertSame(']d1' . Samples::AMBIGUOUS_PACK_IDENTIFIER, (string) $shipment->identifier);
     }
 }
