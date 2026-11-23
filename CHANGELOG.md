@@ -28,7 +28,8 @@ covered.
 - Schema: a migration shrinks `gs1_eu_fmd_pack_code` columns to 512 and `gs1_ru_marking_identifier` columns to 74.
   No value vo-gs1 0.x could read back exceeds them (a 513/514-character FMD value never reloaded); check with
   `SELECT … WHERE LENGTH(col) > 512` before migrating.
-- Stored `MarkingIdentifier` values that 1.0 refuses as ambiguous need `]d1` prepended (vo-gs1 CHANGELOG).
+- Stored `MarkingIdentifier` values that vo-gs1 1.0 refuses as ambiguous (a 0.x pack КИ kept as its bare 25
+  characters) load as the pack, as 0.x read them; a later write stores them as `]d1` + 25.
 
 ## [0.1.0] - 2026-11-20
 

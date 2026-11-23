@@ -13,3 +13,8 @@
   length contract test covers only VARCHAR types and asserts every VARCHAR bound is at most 4000.
 - Writing a VO of another class is refused by vo-base-doctrine's `AbstractStringVoType` (S-1); the gs1 string-type
   tests pin the message `Expected <own class>, got <other class>.`
+
+- `RuMarkingIdentifierType` (ORM and ODM) overrides `convertToPHPValue()`: a bare 25-character value that vo-gs1 1.0
+  refuses as ambiguous can only be a 0.x row (1.0 writes that pack as `]d1` + 25), so it loads through
+  `MarkingIdentifier::fromTobaccoConsumerPack()`, as 0.x read it (G15). The check is not a `catch` around
+  `parent::convertToPHPValue()`, because PHPStan reports that catch as never thrown.

@@ -43,6 +43,7 @@ use MSSTC4PHP\ValueObject\Gs1\Doctrine\Odm\TypeRegistrar;
 use MSSTC4PHP\ValueObject\Gs1\Doctrine\Tests\Support\Samples;
 use MSSTC4PHP\ValueObject\Gs1\Key\Gtin;
 use MSSTC4PHP\ValueObject\Gs1\Key\Sscc;
+use MSSTC4PHP\ValueObject\Gs1\Marking\RU\MarkingIdentifier;
 use Override;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
@@ -149,5 +150,15 @@ final class StringTypesTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
 
         Type::getType($name)->convertToPHPValue(123);
+    }
+
+    public function testA0xRowOfAnAmbiguousPackIdentifierLoadsAsThePack(): void
+    {
+        $type = Type::getType(RuMarkingIdentifierType::NAME);
+        $identifier = $type->convertToPHPValue("0104600439930501215U!Mq'X");
+
+        self::assertInstanceOf(MarkingIdentifier::class, $identifier);
+        self::assertTrue($identifier->isTobaccoConsumerPack());
+        self::assertSame("]d10104600439930501215U!Mq'X", $type->convertToDatabaseValue($identifier));
     }
 }
