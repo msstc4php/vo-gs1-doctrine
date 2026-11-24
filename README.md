@@ -112,7 +112,7 @@ Registration, ORM or ODM (the two branches never see each other):
 ```
 
 Symfony: map `TypeRegistrar::types()` (name => class) under `doctrine.dbal.types` (ORM) or
-`doctrine_mongodb.odm.types` (ODM). Then use the type name in the mapping:
+the top-level `doctrine_mongodb.types` (ODM). Then use the type name in the mapping:
 
 ```php
 #[ORM\Column(type: 'gs1_gtin', length: 14)]
